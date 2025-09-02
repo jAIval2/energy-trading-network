@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <copy file="/Users/kayan/Developer/fabric/fabric-samples/energy-trading-network/chaincode/energy-trading-java/target/energy-trading-chaincode-1.0.0.jar" tofile="/Users/kayan/Developer/fabric/fabric-samples/energy-trading-network/chaincode/energy-trading-java/target/chaincode.jar" />
+  </target>
+</project>

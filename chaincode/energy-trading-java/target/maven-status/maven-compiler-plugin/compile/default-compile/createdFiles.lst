@@ -1,0 +1,8 @@
+org/energy/trading/EnergyTradingChaincode.class
+org/energy/trading/models/EnergyCredit.class
+org/energy/trading/models/GenerationEvent.class
+org/energy/trading/contracts/EnergyTradingContract.class
+org/energy/trading/contracts/EnergyTradingContract$EnergyTradingErrors.class
+org/energy/trading/models/Prosumer.class
+org/energy/trading/models/SimplifiedPPA.class
+org/energy/trading/models/PowerPurchaseAgreement.class

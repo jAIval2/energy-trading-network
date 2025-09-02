@@ -1,0 +1,2 @@
+#!/bin/sh
+exec java -jar ../energy-trading-chaincode-1.0.0.jar "$@"
