@@ -16,6 +16,9 @@ public final class EnergyTradingChaincode {
             logger.info("Chaincode ready, starting router...");
             router.start(args);
 
+            // Keep the process alive if this class is used as entrypoint
+            Thread.currentThread().join();
+
         } catch (Exception e) {
             System.err.println("CRITICAL ERROR: Failed to start chaincode: " + e.getMessage());
             e.printStackTrace(System.err);

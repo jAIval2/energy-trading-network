@@ -9,7 +9,6 @@ import org.energy.trading.models.GenerationEvent;
 import org.energy.trading.models.Prosumer;
 import org.hyperledger.fabric.contract.Context;
 import org.hyperledger.fabric.contract.ContractInterface;
-import org.hyperledger.fabric.contract.annotation.Contact;
 import org.hyperledger.fabric.contract.annotation.Contract;
 import org.hyperledger.fabric.contract.annotation.Default;
 import org.hyperledger.fabric.contract.annotation.Info;
@@ -35,10 +34,9 @@ import java.util.Date;
                 version = "1.0.0",
                 license = @License(
                         name = "Apache License Version 2.0",
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.html"),
-                contact = @Contact(
-                        email = "contact@energytrading.com",
-                        name = "Energy Trading Platform")))
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.html")
+        )
+)
 @Default
 public class EnergyTradingContract implements ContractInterface {
 
@@ -46,9 +44,9 @@ public class EnergyTradingContract implements ContractInterface {
 
     // Constants
     private static final double MIN_TARIFF = 0.0;
-    private static final double MAX_TARIFF = 1000.0; // Arbitrary high value
+    private static final double MAX_TARIFF = 1000.0;
     private static final double MIN_ENERGY = 0.0;
-    private static final double MAX_ENERGY = 1000000.0; // Arbitrary high value
+    private static final double MAX_ENERGY = 1000000.0;
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final double TOKEN_TO_KWH_RATIO = 1.0; // 1 token = 1 kWh
 
@@ -79,12 +77,12 @@ public class EnergyTradingContract implements ContractInterface {
     // Helper method to validate input parameters
     private void validateInput(String paramName, double value, double min, double max) {
         if (value < min) {
-            throw new ChaincodeException(String.format("%s cannot be negative: %.2f", paramName, value), 
-                EnergyTradingErrors.NEGATIVE_VALUE_NOT_ALLOWED.toString());
+            throw new ChaincodeException(String.format("%s cannot be negative: %.2f", paramName, value),
+                    EnergyTradingErrors.NEGATIVE_VALUE_NOT_ALLOWED.toString());
         }
         if (value > max) {
-            throw new ChaincodeException(String.format("%s value %.2f exceeds maximum allowed value of %.2f", 
-                paramName, value, max), EnergyTradingErrors.VALUE_OUT_OF_RANGE.toString());
+            throw new ChaincodeException(String.format("%s value %.2f exceeds maximum allowed value of %.2f",
+                    paramName, value, max), EnergyTradingErrors.VALUE_OUT_OF_RANGE.toString());
         }
     }
 
@@ -95,20 +93,17 @@ public class EnergyTradingContract implements ContractInterface {
             sdf.setLenient(false);
             Date start = sdf.parse(startDate);
             Date end = sdf.parse(endDate);
-            
+
             if (start.after(end)) {
-                throw new ChaincodeException(EnergyTradingErrors.INVALID_DATE_RANGE.getMessage(), 
-                    EnergyTradingErrors.INVALID_DATE_RANGE.toString());
+                throw new ChaincodeException(EnergyTradingErrors.INVALID_DATE_RANGE.getMessage(),
+                        EnergyTradingErrors.INVALID_DATE_RANGE.toString());
             }
         } catch (ParseException e) {
-            throw new ChaincodeException("Invalid date format. Expected format: " + DATE_FORMAT, 
-                EnergyTradingErrors.INVALID_INPUT.toString());
+            throw new ChaincodeException("Invalid date format. Expected format: " + DATE_FORMAT,
+                    EnergyTradingErrors.INVALID_INPUT.toString());
         }
     }
 
-    /**
-     * Initialize the ledger with sample data
-     */
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public void initLedger(final Context context) {
         ChaincodeStub stub = context.getStub();
@@ -122,11 +117,6 @@ public class EnergyTradingContract implements ContractInterface {
         createSamplePPA(context, "PPA002", "PROSUMER002", "CORPORATE001", 4.2, "2025-01-01", "2030-12-31");
     }
 
-    // MAIN API FUNCTION - THIS IS WHAT YOUR API WILL CALL
-    /**
-     * Process electricity generation data and automatically create tokens and update PPA
-     * This is the main function that your API endpoint will call
-     */
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public String processElectricityGeneration(final Context context,
                                                final String prosumerId,
@@ -135,52 +125,42 @@ public class EnergyTradingContract implements ContractInterface {
                                                final String timestamp,
                                                final String buyerId) {
 
-        // Input validation
         if (prosumerId == null || prosumerId.trim().isEmpty() ||
             meterId == null || meterId.trim().isEmpty() ||
             timestamp == null || timestamp.trim().isEmpty() ||
             buyerId == null || buyerId.trim().isEmpty()) {
-            throw new ChaincodeException("All parameters are required and cannot be empty", 
-                EnergyTradingErrors.INVALID_INPUT.toString());
+            throw new ChaincodeException("All parameters are required and cannot be empty",
+                    EnergyTradingErrors.INVALID_INPUT.toString());
         }
-        
+
         validateInput("generatedKWh", generatedKWh, MIN_ENERGY, MAX_ENERGY);
 
         ChaincodeStub stub = context.getStub();
 
         try {
-            // 1. Verify prosumer exists
             Prosumer prosumer = getProsumer(context, prosumerId);
-
-            // 2. Find or create PPA for this prosumer-buyer combination
             String agreementId = findOrCreatePPA(context, prosumerId, buyerId);
             SimplifiedPPA ppa = getPPA(context, agreementId);
 
-            // 3. Calculate tokens and invoice value
             double tokensToIssue = generatedKWh * TOKEN_TO_KWH_RATIO;
             double invoiceValue = generatedKWh * ppa.getTariffPerKWh();
 
-            // 4. Create generation event record
             String eventId = prosumerId + "_" + System.currentTimeMillis();
             GenerationEvent event = new GenerationEvent(eventId, prosumerId, meterId,
                     generatedKWh, timestamp, agreementId,
                     tokensToIssue, invoiceValue);
 
-            // 5. Create energy tokens
             String tokenId = "TOKEN_" + eventId;
             EnergyCredit energyToken = new EnergyCredit(tokenId, prosumerId, generatedKWh,
                     "SOLAR", prosumerId, ppa.getTariffPerKWh(),
                     prosumer.getLocation(), true);
 
-            // 6. Update PPA totals
             ppa.setTotalEnergyGenerated(ppa.getTotalEnergyGenerated() + generatedKWh);
             ppa.setTotalTokensIssued(ppa.getTotalTokensIssued() + tokensToIssue);
             ppa.setTotalInvoiceValue(ppa.getTotalInvoiceValue() + invoiceValue);
 
-            // 7. Update prosumer statistics
             prosumer.setTotalEnergyGenerated(prosumer.getTotalEnergyGenerated() + generatedKWh);
 
-            // 8. Save everything to blockchain
             String eventJSON = objectMapper.writeValueAsString(event);
             stub.putStringState("EVENT_" + eventId, eventJSON);
 
@@ -193,7 +173,6 @@ public class EnergyTradingContract implements ContractInterface {
             String prosumerJSON = objectMapper.writeValueAsString(prosumer);
             stub.putStringState("PROSUMER_" + prosumerId, prosumerJSON);
 
-            // 9. Return success response
             return String.format("{\"status\":\"SUCCESS\",\"eventId\":\"%s\",\"tokenId\":\"%s\",\"tokensIssued\":%.2f,\"invoiceValue\":%.2f,\"agreementId\":\"%s\"}",
                     eventId, tokenId, tokensToIssue, invoiceValue, agreementId);
 
@@ -202,24 +181,20 @@ public class EnergyTradingContract implements ContractInterface {
         }
     }
 
-    /**
-     * Create or update PPA agreement
-     */
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public SimplifiedPPA createPPA(final Context context, final String agreementId,
                                    final String prosumerId, final String buyerId,
                                    final double tariffPerKWh, final String startDate, final String endDate) {
 
-        // Input validation
         if (agreementId == null || agreementId.trim().isEmpty() ||
             prosumerId == null || prosumerId.trim().isEmpty() ||
             buyerId == null || buyerId.trim().isEmpty() ||
             startDate == null || startDate.trim().isEmpty() ||
             endDate == null || endDate.trim().isEmpty()) {
-            throw new ChaincodeException("All parameters are required and cannot be empty", 
-                EnergyTradingErrors.INVALID_INPUT.toString());
+            throw new ChaincodeException("All parameters are required and cannot be empty",
+                    EnergyTradingErrors.INVALID_INPUT.toString());
         }
-        
+
         validateInput("tariffPerKWh", tariffPerKWh, MIN_TARIFF, MAX_TARIFF);
         validateDateRange(startDate, endDate);
 
@@ -245,9 +220,6 @@ public class EnergyTradingContract implements ContractInterface {
         }
     }
 
-    /**
-     * Get PPA details
-     */
     @Transaction(intent = Transaction.TYPE.EVALUATE)
     public SimplifiedPPA getPPA(final Context context, final String agreementId) {
         ChaincodeStub stub = context.getStub();
@@ -266,9 +238,6 @@ public class EnergyTradingContract implements ContractInterface {
         }
     }
 
-    /**
-     * Get generation events for a prosumer
-     */
     @Transaction(intent = Transaction.TYPE.EVALUATE)
     public String getGenerationEvents(final Context context, final String prosumerId) {
         ChaincodeStub stub = context.getStub();
@@ -293,9 +262,6 @@ public class EnergyTradingContract implements ContractInterface {
         }
     }
 
-    /**
-     * Get available energy tokens
-     */
     @Transaction(intent = Transaction.TYPE.EVALUATE)
     public String getAvailableTokens(final Context context) {
         ChaincodeStub stub = context.getStub();
@@ -305,7 +271,7 @@ public class EnergyTradingContract implements ContractInterface {
         for (KeyValue result : results) {
             try {
                 EnergyCredit token = objectMapper.readValue(result.getStringValue(), EnergyCredit.class);
-                if ("AVAILABLE".equals(token.getStatus())) {
+                if (token.isAvailable()) { // ✅ fixed: check boolean flag
                     availableTokens.add(token);
                 }
             } catch (JsonProcessingException e) {
@@ -320,9 +286,6 @@ public class EnergyTradingContract implements ContractInterface {
         }
     }
 
-    /**
-     * Register a new prosumer
-     */
     @Transaction(intent = Transaction.TYPE.SUBMIT)
     public Prosumer registerProsumer(final Context context, final String prosumerId,
                                      final String name, final String location,
@@ -348,9 +311,6 @@ public class EnergyTradingContract implements ContractInterface {
         }
     }
 
-    /**
-     * Get prosumer details
-     */
     @Transaction(intent = Transaction.TYPE.EVALUATE)
     public Prosumer getProsumer(final Context context, final String prosumerId) {
         ChaincodeStub stub = context.getStub();
@@ -369,12 +329,9 @@ public class EnergyTradingContract implements ContractInterface {
         }
     }
 
-    // HELPER METHODS
-
     private String findOrCreatePPA(Context context, String prosumerId, String buyerId) {
         ChaincodeStub stub = context.getStub();
 
-        // Try to find existing PPA
         QueryResultsIterator<KeyValue> results = stub.getStateByRange("PPA_", "PPA_~");
         for (KeyValue result : results) {
             try {
@@ -387,7 +344,6 @@ public class EnergyTradingContract implements ContractInterface {
             }
         }
 
-        // Create new PPA if not found
         String newAgreementId = "PPA_" + prosumerId + "_" + buyerId + "_" + System.currentTimeMillis();
         createPPA(context, newAgreementId, prosumerId, buyerId, 4.5, "2025-01-01", "2030-12-31");
         return newAgreementId;
@@ -398,7 +354,7 @@ public class EnergyTradingContract implements ContractInterface {
         try {
             registerProsumer(context, id, name, location, capacity, msp);
         } catch (ChaincodeException e) {
-            // Ignore if already exists during initialization
+            // Ignore if already exists
         }
     }
 
@@ -407,7 +363,7 @@ public class EnergyTradingContract implements ContractInterface {
         try {
             createPPA(context, agreementId, prosumerId, buyerId, tariff, startDate, endDate);
         } catch (ChaincodeException e) {
-            // Ignore if already exists during initialization
+            // Ignore if already exists
         }
     }
 }
