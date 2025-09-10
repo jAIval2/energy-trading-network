@@ -1,1 +1,0 @@
-Error: endorsement failure during invoke. response: status:500 message:"error in simulation: failed to execute transaction c699d9cc9d77111b6b95730621539442aecaa11e5c57a9ba83ea177b14f1fd55: could not launch chaincode energy-trading-chaincode_1.3:ca45968615e3ffd8d398ac93187bb498de98fce81855998050140b4c86a05387: chaincode registration failed: container exited with 0" 

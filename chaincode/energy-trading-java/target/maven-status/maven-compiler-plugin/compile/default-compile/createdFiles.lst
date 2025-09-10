@@ -1,4 +1,3 @@
-org/energy/trading/EnergyTradingChaincode.class
 org/energy/trading/models/EnergyCredit.class
 org/energy/trading/models/GenerationEvent.class
 org/energy/trading/contracts/EnergyTradingContract.class

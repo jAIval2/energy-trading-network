@@ -37,8 +37,9 @@
                 </filter>
               </filters>
               <transformers>
+                <transformer />
                 <transformer>
-                  <mainClass>org.energy.trading.EnergyTradingChaincode</mainClass>
+                  <mainClass>org.hyperledger.fabric.contract.ContractRouter</mainClass>
                 </transformer>
               </transformers>
             </configuration>
