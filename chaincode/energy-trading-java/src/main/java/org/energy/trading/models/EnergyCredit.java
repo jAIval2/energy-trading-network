@@ -2,16 +2,34 @@ package org.energy.trading.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hyperledger.fabric.contract.annotation.DataType;
+import org.hyperledger.fabric.contract.annotation.Property;
 
+@DataType
 public class EnergyCredit {
 
+    @Property
     private String tokenId;
+
+    @Property
     private String prosumerId;
+
+    @Property
     private double energyAmount; // in kWh
+
+    @Property
     private String energyType;   // e.g. SOLAR, WIND, HYDRO
+
+    @Property
     private String ownerId;      // who owns the token
+
+    @Property
     private double tariffPerKWh; // price of energy per kWh
+
+    @Property
     private String location;
+
+    @Property
     private boolean available;   // ✅ boolean availability flag
 
     @JsonCreator

@@ -145,7 +145,9 @@ public class EnergyTradingContract implements ContractInterface {
             double tokensToIssue = generatedKWh * TOKEN_TO_KWH_RATIO;
             double invoiceValue = generatedKWh * ppa.getTariffPerKWh();
 
-            String eventId = prosumerId + "_" + System.currentTimeMillis();
+            // Use the transaction ID to produce a deterministic eventId across endorsers
+            String txId = stub.getTxId();
+            String eventId = prosumerId + "_" + txId;
             GenerationEvent event = new GenerationEvent(eventId, prosumerId, meterId,
                     generatedKWh, timestamp, agreementId,
                     tokensToIssue, invoiceValue);
@@ -271,11 +273,12 @@ public class EnergyTradingContract implements ContractInterface {
         for (KeyValue result : results) {
             try {
                 EnergyCredit token = objectMapper.readValue(result.getStringValue(), EnergyCredit.class);
-                if (token.isAvailable()) { // ✅ fixed: check boolean flag
+                if (Boolean.TRUE.equals(token.isAvailable())) { // ✅ Null-safe boolean check
                     availableTokens.add(token);
                 }
             } catch (JsonProcessingException e) {
                 // Skip invalid records
+                System.err.println("Error parsing token data: " + e.getMessage());
             }
         }
 
@@ -344,8 +347,10 @@ public class EnergyTradingContract implements ContractInterface {
             }
         }
 
-        String newAgreementId = "PPA_" + prosumerId + "_" + buyerId + "_" + System.currentTimeMillis();
-        createPPA(context, newAgreementId, prosumerId, buyerId, 4.5, "2025-01-01", "2030-12-31");
+    // Use the transaction ID to produce a deterministic agreement id
+    String txId = context.getStub().getTxId();
+    String newAgreementId = "PPA_" + prosumerId + "_" + buyerId + "_" + txId;
+    createPPA(context, newAgreementId, prosumerId, buyerId, 4.5, "2025-01-01", "2030-12-31");
         return newAgreementId;
     }
 
@@ -353,8 +358,9 @@ public class EnergyTradingContract implements ContractInterface {
                                       double capacity, String msp) {
         try {
             registerProsumer(context, id, name, location, capacity, msp);
+            System.out.println("Successfully created sample prosumer: " + id);
         } catch (ChaincodeException e) {
-            // Ignore if already exists
+            System.out.println("Sample prosumer already exists: " + e.getMessage());
         }
     }
 
@@ -362,8 +368,9 @@ public class EnergyTradingContract implements ContractInterface {
                                  String buyerId, double tariff, String startDate, String endDate) {
         try {
             createPPA(context, agreementId, prosumerId, buyerId, tariff, startDate, endDate);
+            System.out.println("Successfully created sample PPA: " + agreementId);
         } catch (ChaincodeException e) {
-            // Ignore if already exists
+            System.out.println("Sample PPA already exists: " + e.getMessage());
         }
     }
 }

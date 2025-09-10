@@ -222,7 +222,7 @@ function createOrgs() {
   # Create crypto material using Fabric CA
   if [ "$CRYPTO" == "Certificate Authorities" ]; then
     infoln "Generating certificates using Fabric CA"
-    ${CONTAINER_CLI_COMPOSE} -f compose/$COMPOSE_FILE_CA -f compose/$CONTAINER_CLI/${CONTAINER_CLI}-$COMPOSE_FILE_CA up -d 2>&1
+    ${CONTAINER_CLI_COMPOSE} -f compose/$COMPOSE_FILE_CA -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-$COMPOSE_FILE_CA up -d 2>&1
 
     . organizations/fabric-ca/registerEnroll.sh
 
@@ -419,7 +419,7 @@ function invokeChaincode() {
 
   setGlobals $ORG
 
-  chaincodeInvoke $ORG $CHANNEL_NAME $CC_NAME $CC_INVOKE_CONSTRUCTOR
+  chaincodeInvoke "$ORG" "$CHANNEL_NAME" "$CC_NAME" "$CC_INVOKE_CONSTRUCTOR"
 
 }
 
@@ -437,7 +437,7 @@ function queryChaincode() {
 
   setGlobals $ORG
 
-  chaincodeQuery $ORG $CHANNEL_NAME $CC_NAME $CC_QUERY_CONSTRUCTOR
+  chaincodeQuery "$ORG" "$CHANNEL_NAME" "$CC_NAME" "$CC_QUERY_CONSTRUCTOR"
 
 }
 
@@ -607,12 +607,45 @@ while [[ $# -ge 1 ]] ; do
     shift
     ;;
   -cci )
-    CC_INIT_FCN="$2"
+    CC_INVOKE_CONSTRUCTOR="$2"
     shift
+    ;;
+  -cci=* )
+    CC_INVOKE_CONSTRUCTOR="${key#-cci=}"
+    ;;
+  -ccic )
+    CC_INVOKE_CONSTRUCTOR="$2"
+    shift
+    ;;
+  -ccic=* ) 
+    CC_INVOKE_CONSTRUCTOR="${key#-ccic=}"
+    ;;
+  -ccic=* )
+    CC_INVOKE_CONSTRUCTOR="${key#-ccic=}"
+    ;;
+  -ccic=* )
+    CC_INVOKE_CONSTRUCTOR="${key#-ccic=}"
+    ;;
+  -ccic=* )
+    CC_INVOKE_CONSTRUCTOR="${key#-ccic=}"
     ;;
   -ccaasdocker )
     CCAAS_DOCKER_RUN="$2"
     shift
+    ;;
+  -ccqc )
+    CC_QUERY_CONSTRUCTOR="$2"
+    shift
+    ;;
+  -ccqc=* )
+    CC_QUERY_CONSTRUCTOR="${key#-ccqc=}"
+    ;;
+  -ccqci )
+    CC_QUERY_CONSTRUCTOR="$2"
+    shift
+    ;;
+  -ccqci=* )
+    CC_QUERY_CONSTRUCTOR="${key#-ccqci=}"
     ;;
   -verbose )
     VERBOSE=true
@@ -629,14 +662,6 @@ while [[ $# -ge 1 ]] ; do
     CA_IMAGETAG="$2"
     shift
     ;;
-  -ccic )
-    CC_INVOKE_CONSTRUCTOR="$2"
-    shift
-    ;;
-  -ccqc )
-    CC_QUERY_CONSTRUCTOR="$2"
-    shift
-    ;;    
   * )
     errorln "Unknown flag: $key"
     printHelp

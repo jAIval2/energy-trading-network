@@ -2,18 +2,37 @@ package org.energy.trading.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hyperledger.fabric.contract.annotation.DataType;
+import org.hyperledger.fabric.contract.annotation.Property;
 
+@DataType
 public class SimplifiedPPA {
 
+    @Property
     private String agreementId;
+
+    @Property
     private String prosumerId;
+
+    @Property
     private String buyerId;
+
+    @Property
     private double tariffPerKWh;
+
+    @Property
     private String startDate;
+
+    @Property
     private String endDate;
 
+    @Property
     private double totalEnergyGenerated;
+
+    @Property
     private double totalTokensIssued;
+
+    @Property
     private double totalInvoiceValue;
 
     @JsonCreator

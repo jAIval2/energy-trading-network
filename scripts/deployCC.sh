@@ -11,8 +11,8 @@ CC_SEQUENCE=${6:-"1"}
 CC_INIT_FCN=${7:-"NA"}
 CC_END_POLICY=${8:-"NA"}
 CC_COLL_CONFIG=${9:-"NA"}
-DELAY=${10:-"3"}
-MAX_RETRY=${11:-"5"}
+DELAY=${10:-"10"}
+MAX_RETRY=${11:-"10"}
 VERBOSE=${12:-"false"}
 
 println "executing with the following"

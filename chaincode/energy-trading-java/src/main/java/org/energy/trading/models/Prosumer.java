@@ -2,15 +2,28 @@ package org.energy.trading.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hyperledger.fabric.contract.annotation.DataType;
+import org.hyperledger.fabric.contract.annotation.Property;
 
+@DataType
 public class Prosumer {
 
+    @Property
     private String prosumerId;
+
+    @Property
     private String name;
+
+    @Property
     private String location;
+
+    @Property
     private double solarCapacityKW;
+
+    @Property
     private String organizationMSP;
 
+    @Property
     private double totalEnergyGenerated;
 
     @JsonCreator
