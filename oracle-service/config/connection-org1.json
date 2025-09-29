@@ -1,0 +1,46 @@
+{
+    "name": "energy-trading-network",
+    "version": "1.0.0",
+    "client": {
+        "organization": "Org1",
+        "connection": {
+            "timeout": {
+                "peer": {
+                    "endorser": "300"
+                },
+                "orderer": "300"
+            }
+        }
+    },
+    "organizations": {
+        "Org1": {
+            "mspid": "Org1MSP",
+            "peers": ["peer0.org1.example.com"],
+            "certificateAuthorities": []
+        }
+    },
+    "peers": {
+        "peer0.org1.example.com": {
+            "url": "grpcs://localhost:7051",
+            "tlsCACerts": {
+                "pem": "-----BEGIN CERTIFICATE-----\nMIICWDCCAf2gAwIBAgIQJvzikNiPiEjj7trODFmg8zAKBggqhkjOPQQDAjB2MQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEZMBcGA1UEChMQb3JnMS5leGFtcGxlLmNvbTEfMB0GA1UEAxMWdGxz\nY2Eub3JnMS5leGFtcGxlLmNvbTAeFw0yNTA5MjkxODIwMDBaFw0zNTA5MjcxODIw\nMDBaMHYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQH\nEw1TYW4gRnJhbmNpc2NvMRkwFwYDVQQKExBvcmcxLmV4YW1wbGUuY29tMR8wHQYD\nVQQDExZ0bHNjYS5vcmcxLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0D\nAQcDQgAE/FsdpPlM8Qrje60+xzB7k2GmFe2MORjoHoV1KgnVrOkDXef0ifwUPf2d\nVHxBjJxjHk5NBrDmvE1Ji9FG7evWo6NtMGswDgYDVR0PAQH/BAQDAgGmMB0GA1Ud\nJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MCkGA1Ud\nDgQiBCCFqUmDVYZotNiVL8CDtEHSjY6QNe2PkbDAF8BNLgNaADAKBggqhkjOPQQD\nAgNJADBGAiEAzEFQg+gwG5IRMrBYo92sVEFvZ6znZvFQ1vn46OrgKdoCIQCg+Xbt\njg4wF9ay/6A7kfk98PcU2N01PJ8XMTfaxnVP/Q==\n-----END CERTIFICATE-----\n"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer0.org1.example.com",
+                "hostnameOverride": "peer0.org1.example.com"
+            }
+        }
+    },
+    "orderers": {
+        "orderer.example.com": {
+            "url": "grpcs://localhost:7050",
+            "tlsCACerts": {
+                "pem": "-----BEGIN CERTIFICATE-----\nMIICQjCCAemgAwIBAgIQLJhmRZotyaHlaeRjnVTHCTAKBggqhkjOPQQDAjBsMQsw\nCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZy\nYW5jaXNjbzEUMBIGA1UEChMLZXhhbXBsZS5jb20xGjAYBgNVBAMTEXRsc2NhLmV4\nYW1wbGUuY29tMB4XDTI1MDkyOTE4MjAwMFoXDTM1MDkyNzE4MjAwMFowbDELMAkG\nA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFu\nY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRowGAYDVQQDExF0bHNjYS5leGFt\ncGxlLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABOwqF1YXLWcsbVWx6sqa\nzAMzaM5EYGEkDpPKsehd945JlzSSAzmnLkut97zHj0kULb/kjDtpmgCmteT1HyUw\niOejbTBrMA4GA1UdDwEB/wQEAwIBpjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYB\nBQUHAwEwDwYDVR0TAQH/BAUwAwEB/zApBgNVHQ4EIgQgvE4zrNs5KQkYZIw5Jomd\niYo5OajUpOOJMzsDrUU1nSowCgYIKoZIzj0EAwIDRwAwRAIgFAP0H+yf2ix3zP50\nZHxKcC5qu7T/KjlP9c8jl1UAW5sCIEOBz0bq5YNmSzXUKeRN+Y4ZaujTII7tIx76\nVMsZAzuf\n-----END CERTIFICATE-----\n"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "orderer.example.com",
+                "hostnameOverride": "orderer.example.com"
+            }
+        }
+    }
+}
