@@ -42,18 +42,73 @@ class EnergyOracleService {
                 await this.enrollOracleIdentity(wallet);
             }
             
-            // Connect to gateway
+            // Connect to gateway with retries and graceful fallback if discovery fails
             this.gateway = new Gateway();
-            await this.gateway.connect(ccp, {
-                wallet,
-                identity: process.env.USER_ID,
-                discovery: { enabled: true, asLocalhost: true }
-            });
-            
-            logger.info('Connected to Fabric gateway');
+
+            const maxConnectAttempts = 6;
+            const baseDelay = 2000; // ms
+            let connected = false;
+            let lastError = null;
+
+            for (let attempt = 1; attempt <= maxConnectAttempts; attempt++) {
+                try {
+                    logger.info(`Attempting gateway.connect (attempt ${attempt}/${maxConnectAttempts})...`);
+                    await this.gateway.connect(ccp, {
+                        wallet,
+                        identity: process.env.USER_ID,
+                        discovery: { enabled: true, asLocalhost: true }
+                    });
+                    connected = true;
+                    logger.info('Connected to Fabric gateway (with discovery enabled)');
+                    break;
+                } catch (err) {
+                    lastError = err;
+                    logger.error(`gateway.connect attempt ${attempt} failed`, err);
+                    // exponential backoff
+                    const wait = baseDelay * Math.pow(2, attempt - 1);
+                    logger.info(`Waiting ${wait}ms before next attempt...`);
+                    await new Promise(r => setTimeout(r, wait));
+                }
+            }
+
+            // If discovery-enabled connection failed, attempt a fallback without discovery
+            if (!connected) {
+                logger.info('All discovery-enabled connect attempts failed, trying fallback with discovery disabled...');
+                try {
+                    await this.gateway.connect(ccp, {
+                        wallet,
+                        identity: process.env.USER_ID,
+                        discovery: { enabled: false, asLocalhost: true }
+                    });
+                    connected = true;
+                    logger.info('Connected to Fabric gateway (with discovery disabled)');
+                } catch (err) {
+                    logger.error('Fallback gateway.connect (discovery disabled) failed', err);
+                    throw lastError || err;
+                }
+            }
             
             // Get network and contract
-            const network = await this.gateway.getNetwork(process.env.CHANNEL_NAME);
+            let network;
+            try {
+                network = await this.gateway.getNetwork(process.env.CHANNEL_NAME);
+            } catch (err) {
+                logger.error('Failed to get network using discovery-enabled gateway', err);
+                // If discovery failed, attempt a reconnect with discovery disabled and retry once
+                try {
+                    logger.info('Reconnecting gateway with discovery disabled as fallback...');
+                    // disconnect previous gateway
+                    try { await this.gateway.disconnect(); } catch (e) { /* ignore */ }
+                    this.gateway = new Gateway();
+                    await this.gateway.connect(ccp, { wallet, identity: process.env.USER_ID, discovery: { enabled: false, asLocalhost: true } });
+                    logger.info('Reconnected gateway (discovery disabled)');
+                    network = await this.gateway.getNetwork(process.env.CHANNEL_NAME);
+                } catch (err2) {
+                    logger.error('Fallback to discovery-disabled gateway failed', err2);
+                    throw err; // throw original discovery error
+                }
+            }
+
             this.contract = network.getContract(process.env.CHAINCODE_NAME);
             
             logger.success('Oracle service initialized successfully');
